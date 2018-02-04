@@ -227,14 +227,14 @@ slight_FilterMedianRingbuffer <int16_t> filter_a_z(
 );
 
 
-const size_t x_size = 6;
-int16_t x_raw[x_size];
-int16_t x_sorted[x_size];
-slight_FilterMedianRingbuffer <int16_t> x_filter(
-    x_raw,
-    x_sorted,
-    x_size
-);
+// const size_t x_size = 6;
+// int16_t x_raw[x_size];
+// int16_t x_sorted[x_size];
+// slight_FilterMedianRingbuffer <int16_t> x_filter(
+//     x_raw,
+//     x_sorted,
+//     x_size
+// );
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -352,10 +352,10 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
             out.println(F("\t 'Y': toggle DebugOut livesign LED"));
             out.println(F("\t 'x': tests"));
             out.println();
-            out.println(F("\t filter tests:"));
-            out.println(F("\t 'q': print values"));
-            out.println(F("\t 'w': add random value"));
-            out.println(F("\t 'e': print filterd value"));
+            // out.println(F("\t filter tests:"));
+            // out.println(F("\t 'q': print values"));
+            // out.println(F("\t 'w': add random value"));
+            // out.println(F("\t 'e': print filterd value"));
             out.println();
             out.println(F("\t 'a': toggle lsm303 serial output "));
             out.print(F("\t 'A': set lsm303 serial output interval 'i65535' ("));
@@ -411,27 +411,27 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
             out.println(F("__________"));
         } break;
         //---------------------------------------------------------------------
-        case 'q': {
-            out.println(F("print values:"));
-            out.println(F(" x_raw"));
-            slight_DebugMenu::print_int16_array(out, x_raw, x_size);
-            out.println();
-            out.println(F(" x_sorted"));
-            slight_DebugMenu::print_int16_array(out, x_sorted, x_size);
-            out.println();
-        } break;
-        case 'w': {
-            out.print(F("add one new value:"));
-            size_t value = random(0, 255);
-            out.print(value);
-            out.println();
-            x_filter.add_value(value);
-        } break;
-        case 'e': {
-            out.print(F("print filterd value:"));
-            out.print(x_filter.get_filterd_value());
-            out.println();
-        } break;
+        // case 'q': {
+        //     out.println(F("print values:"));
+        //     out.println(F(" x_raw"));
+        //     slight_DebugMenu::print_int16_array(out, x_raw, x_size);
+        //     out.println();
+        //     out.println(F(" x_sorted"));
+        //     slight_DebugMenu::print_int16_array(out, x_sorted, x_size);
+        //     out.println();
+        // } break;
+        // case 'w': {
+        //     out.print(F("add one new value:"));
+        //     size_t value = random(0, 255);
+        //     out.print(value);
+        //     out.println();
+        //     x_filter.add_value(value);
+        // } break;
+        // case 'e': {
+        //     out.print(F("print filterd value:"));
+        //     out.print(x_filter.get_filterd_value());
+        //     out.println();
+        // } break;
         //---------------------------------------------------------------------
         case 'a': {
             out.println(F("\t toggle lsm303 serial output"));

@@ -69,6 +69,9 @@ class slight_FilterMedianRingbuffer {
 
     size_t get_ringbuffer_index();
 
+    void set_average_frame_length(size_t length);
+    size_t get_average_frame_length();
+
     void update();
 
 
@@ -137,6 +140,22 @@ template <class T>
 size_t slight_FilterMedianRingbuffer<T>::get_ringbuffer_index() {
     return ringbuffer_index;
 }
+
+template <class T>
+void slight_FilterMedianRingbuffer<T>::set_average_frame_length(size_t length) {
+    if (length <= values_length) {
+        average_frame_length = length;
+    } else {
+        average_frame_length = values_length;
+    }
+}
+
+template <class T>
+size_t slight_FilterMedianRingbuffer<T>::get_average_frame_length() {
+    return average_frame_length;
+}
+
+
 
 template <class T>
 void slight_FilterMedianRingbuffer<T>::update() {

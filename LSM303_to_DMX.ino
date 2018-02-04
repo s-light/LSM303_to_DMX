@@ -19,6 +19,7 @@
 
     libraries used:
         ~ slight_DebugMenu
+        ~ slight_FilterMedian
         ~ slight_Button
             License: MIT
             written by stefan krueger (s-light),
@@ -71,8 +72,9 @@
 // #include <file.h>
 
 #include <slight_DebugMenu.h>
-#include <slight_FaderLin.h>
 #include <slight_ButtonInput.h>
+// #include <slight_filter.h>
+#include "./slight_filter.h"
 
 // #include <DMXSerial.h>
 
@@ -199,6 +201,33 @@ const uint16_t lsm303_serial_out_interval = 500;
 bool lsm303_dmx_send_enabled = false;
 uint32_t lsm303_dmx_send_timestamp_last = 0;
 const uint16_t lsm303_dmx_send_interval = 500;
+
+
+const size_t filter_size = 20;
+int16_t lsm303_a_x_raw[filter_size];
+int16_t lsm303_a_x_temp[filter_size];
+int16_t lsm303_a_x_filterd;
+slight_FilterMedianRingbuffer <int16_t> filter_a_x(
+    lsm303_a_x_raw,
+    lsm303_a_x_temp,
+    filter_size
+);
+int16_t lsm303_a_y_raw[filter_size];
+int16_t lsm303_a_y_temp[filter_size];
+int16_t lsm303_a_y_filterd;
+slight_FilterMedianRingbuffer <int16_t> filter_a_y(
+    lsm303_a_y_raw,
+    lsm303_a_y_temp,
+    filter_size
+);
+int16_t lsm303_a_z_raw[filter_size];
+int16_t lsm303_a_z_temp[filter_size];
+int16_t lsm303_a_z_filterd;
+slight_FilterMedianRingbuffer <int16_t> filter_a_z(
+    lsm303_a_z_raw,
+    lsm303_a_z_temp,
+    filter_size
+);
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -572,32 +601,36 @@ void handle_LSM303() {
 
 
 void lsm303_read() {
-        compass.read();
+    compass.read();
 
-        char line[24];
-        snprintf(
-            line,
-            sizeof(line),
-            "A: %6d %6d %6d;",
-            compass.a.x,
-            compass.a.y,
-            compass.a.z
-        );
-        DebugOut.println(line);
+    // lsm303_a_x_filterd = filter_a_x.add_value(compass.a.x);
+    // lsm303_a_y_filterd = filter_a_y.add_value(compass.a.y);
+    // lsm303_a_z_filterd = filter_a_z.add_value(compass.a.z);
 }
 
 
 void lsm303_serial_out_print() {
-        compass.read();
-
-        char line[24];
+        // char line[24];
+        // snprintf(
+        //     line,
+        //     sizeof(line),
+        //     "A: %6d %6d %6d;",
+        //     compass.a.x,
+        //     compass.a.y,
+        //     compass.a.z
+        // );
+        // DebugOut.println(line);
+        char line[60];
         snprintf(
             line,
             sizeof(line),
-            "A: %6d %6d %6d;",
+            "A: %6d %6d %6d; AF: %6d %6d %6d;",
             compass.a.x,
             compass.a.y,
-            compass.a.z
+            compass.a.z,
+            lsm303_a_x_filterd,
+            lsm303_a_y_filterd,
+            lsm303_a_z_filterd
         );
         DebugOut.println(line);
 }

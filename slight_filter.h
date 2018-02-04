@@ -202,8 +202,8 @@ T slight_FilterMedianRingbuffer<T>::average(
     const T values[],
     const size_t values_length
 ) {
-    // get center area
-    T value_sum = 0;
+    // ohh - this can overflow easily....
+    int32_t value_sum = 0;
     T value_result = 0;
     for (
         size_t i = 0;

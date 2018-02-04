@@ -196,11 +196,11 @@ const uint16_t lsm303_read_interval = 20;
 
 bool lsm303_serial_out_enabled = false;
 uint32_t lsm303_serial_out_timestamp_last = 0;
-const uint16_t lsm303_serial_out_interval = 500;
+uint16_t lsm303_serial_out_interval = 100;
 
 bool lsm303_dmx_send_enabled = false;
 uint32_t lsm303_dmx_send_timestamp_last = 0;
-const uint16_t lsm303_dmx_send_interval = 500;
+uint16_t lsm303_dmx_send_interval = 500;
 
 
 const size_t filter_size = 20;
@@ -224,6 +224,16 @@ slight_FilterMedianRingbuffer <int16_t> filter_a_z(
     lsm303_a_z_raw,
     lsm303_a_z_temp,
     filter_size
+);
+
+
+const size_t x_size = 6;
+int16_t x_raw[x_size];
+int16_t x_temp[x_size];
+slight_FilterMedianRingbuffer <int16_t> x_filter(
+    x_raw,
+    x_temp,
+    x_size
 );
 
 
@@ -342,8 +352,14 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
             out.println(F("\t 'Y': toggle DebugOut livesign LED"));
             out.println(F("\t 'x': tests"));
             out.println();
-            out.println(F("\t 'a': toggle accelerometer serial output "));
-            out.println(F("\t 'A': toggle accelerometer dmx output "));
+            out.println(F("\t 'a': toggle lsm303 serial output "));
+            out.print(F("\t 'A': set lsm303 serial output interval 'i65535' ("));
+            out.print(lsm303_serial_out_interval);
+            out.println();
+            out.println(F("\t 'd': toggle lsm303 dmx output "));
+            out.print(F("\t 'D': set lsm303 dmx send interval 'i65535' ("));
+            out.print(lsm303_dmx_send_interval);
+            out.println();
             // out.println(F("\t 's': set channel 's1:65535'"));
             // out.println(F("\t 'f': DemoFadeTo(ID, value) 'f1:65535'"));
             out.println();
@@ -390,9 +406,34 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
             out.println(F("__________"));
         } break;
         //---------------------------------------------------------------------
-        // case 'A': {
-        //     out.println(F("\t Hello World! :-)"));
-        // } break;
+        case 'a': {
+            out.println(F("\t toggle lsm303 serial output"));
+            lsm303_serial_out_enabled = !lsm303_serial_out_enabled;
+        } break;
+        case 'A': {
+            out.print(F("\t set lsm303 serial output interval "));
+            // convert part of string to int
+            // (up to first char that is not a number)
+            uint8_t command_offset = 1;
+            uint16_t value = atoi(&command[command_offset]);
+            out.print(value);
+            out.println();
+            lsm303_serial_out_interval = value;
+        } break;
+        case 'd': {
+            out.println(F("\t toggle lsm303 dmx send"));
+            lsm303_dmx_send_enabled = !lsm303_dmx_send_enabled;
+        } break;
+        case 'D': {
+            out.print(F("\t set lsm303 dmx send interval "));
+            // convert part of string to int
+            // (up to first char that is not a number)
+            uint8_t command_offset = 1;
+            uint16_t value = atoi(&command[command_offset]);
+            out.print(value);
+            out.println();
+            lsm303_dmx_send_interval = value;
+        } break;
         // ------------------------------------------
         // case 's': {
         //     out.print(F("\t set channel "));
@@ -599,12 +640,12 @@ void handle_LSM303() {
 
 void lsm303_read() {
     compass.read();
-    filter_a_x.add_value(compass.a.x);
+    // filter_a_x.add_value(compass.a.x);
     filter_a_y.add_value(compass.a.y);
-    filter_a_z.add_value(compass.a.z);
-    filter_a_x.update();
+    // filter_a_z.add_value(compass.a.z);
+    // filter_a_x.update();
     filter_a_y.update();
-    filter_a_z.update();
+    // filter_a_z.update();
 }
 
 
@@ -619,19 +660,30 @@ void lsm303_serial_out_print() {
         //     compass.a.y,
         //     compass.a.z
         // );
-        // DebugOut.println(line);
+
         char line[60];
         snprintf(
             line,
             sizeof(line),
-            "A: %6d %6d %6d; AF: %6d %6d %6d;",
-            compass.a.x,
+            // "A: %6d %6d %6d; AF: %6d %6d %6d;",
+            "A: %6d %6d",
             compass.a.y,
-            compass.a.z,
-            filter_a_x.get_filterd_value(),
-            filter_a_y.get_filterd_value(),
-            filter_a_z.get_filterd_value()
+            filter_a_y.get_filterd_value()
         );
+        // char line[60];
+        // snprintf(
+        //     line,
+        //     sizeof(line),
+        //     // "A: %6d %6d %6d; AF: %6d %6d %6d;",
+        //     "A: %6d %6d %6d; AF: %6d",
+        //     compass.a.x,
+        //     compass.a.y,
+        //     compass.a.z,
+        //     filter_a_x.get_filterd_value()
+        //     // filter_a_y.get_filterd_value(),
+        //     // filter_a_z.get_filterd_value()
+        // );
+
         DebugOut.println(line);
 }
 

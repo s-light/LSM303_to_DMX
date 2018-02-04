@@ -76,8 +76,57 @@
 // 475,  476,  476,  474,  478,  473,  475,  472,  478,  472,  470,  476,  475,
 // 479,  476,  476,  473,  474,  475,  473,  476,  477,  474,  472,  474,  477,
 // 474,  476,  477,  478,  473,  472,  475,  476,  475,  474,    0
-
-
+//
+// uint16_t filter_median(uint8_t fader_id, uint16_t value_new) {
+//     uint16_t value_result = 0;
+//     // median
+//     uint8_t insert_pos = 0;
+//     if (
+//         (value_new < dataout_filter[fader_id][0]) ||
+//         (dataout_filter_index > 0)
+//     ) {
+//         insert_pos = 0;
+//     } else {
+//         while (
+//             !((dataout_filter[fader_id][insert_pos-1] <= value_new) &&
+//             (dataout_filter[fader_id][insert_pos] >= value_new))
+//         ) {
+//             /* code */
+//         }
+//
+//
+//         for (
+//             insert_pos = 1;
+//             insert_pos < dataout_filter_index;
+//             insert_pos++
+//         ) {
+//             if (
+//                 (dataout_filter[fader_id][insert_pos-1] <= value_new) &&
+//                 (dataout_filter[fader_id][insert_pos] >= value_new)
+//             ) {
+//                 // insert_pos is the correct position.
+//                 break;
+//             }
+//         }
+//     }
+//     // move all values higher than current insert position up one position.
+//     for (size_t k = dataout_filter_index; k > insert_pos; k--) {
+//         dataout_filter[fader_id][k] = dataout_filter[fader_id][k-1];
+//     }
+//     // set new value
+//     dataout_filter[fader_id][insert_pos] = value_new;
+//
+//     // increase index
+//     dataout_filter_index = dataout_filter_index +1;
+//     // wrap around
+//     // dataout_filter_index = dataout_filter_index % dataout_filter_count;
+//     if (dataout_filter_index >= dataout_filter_count) {
+//         dataout_filter_index = 0;
+//     }
+//
+//
+//     // average now
+// }
 
 
 

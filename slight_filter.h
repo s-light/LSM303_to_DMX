@@ -52,49 +52,7 @@
 
 
 
-template <class A_Type> class calc {
- public:
-    calc(A_Type myarray_[], size_t myarray_length_);
-    A_Type multiply(A_Type x, A_Type y);
-    A_Type add(A_Type x, A_Type y);
-    void test(A_Type x, A_Type y);
-};
-
-template <class A_Type> calc<A_Type>::calc(
-    A_Type myarray_[],
-    size_t myarray_length_
-) {
-    //
-}
-
-template <class A_Type> A_Type calc<A_Type>::multiply(A_Type x, A_Type y) {
-  return x*y;
-}
-template <class A_Type> A_Type calc<A_Type>::add(A_Type x, A_Type y) {
-  return x+y;
-}
-template <class A_Type> void calc<A_Type>::test(A_Type x, A_Type y) {
-  Serial.println(x+y);
-}
-
-// calc <int16_t> a_calc_class;
-// calc <int16_t> a_calc_class(
-//     lsm303_a_z_raw,
-//     filter_size
-// );
-// a_calc_class.test(5000, 500);
-// out.println(
-//     a_calc_class.add(5000, 500)
-// );
-
-
-
-
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
 template <class T>
 class slight_FilterMedianRingbuffer {
  public:
@@ -106,16 +64,19 @@ class slight_FilterMedianRingbuffer {
     ~slight_FilterMedianRingbuffer();
 
     size_t add_value(T value_new);
+
     T get_filterd_value();
+
     size_t get_ringbuffer_index();
 
     void update();
 
+
+    static T average(const T values[], const size_t values_length);
     static T average_framed(
         const T values[],
         const size_t values_length,
         const size_t frame_count);
-    static T average(const T values[], const size_t values_length);
 
  private:
     T *values_raw;
@@ -214,25 +175,13 @@ void slight_FilterMedianRingbuffer<T>::calculate_median() {
     //     average_frame_length);
 }
 
-template <class T>
-T slight_FilterMedianRingbuffer<T>::average_framed(
-    const T values[],
-    const size_t values_length,
-    const size_t frame_count
-) {
-    // calculate center
-    size_t outside_length = values_length - frame_count;
-    size_t start_offset = outside_length / 2;
-    size_t remainder_length = outside_length-start_offset;
-    return average(
-        values + start_offset*sizeof(T),
-        remainder_length);
-}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 template <class T>
 T slight_FilterMedianRingbuffer<T>::average(
-    T values[],
-    size_t values_length
+    const T values[],
+    const size_t values_length
 ) {
     // get center area
     T value_sum = 0;
@@ -249,56 +198,21 @@ T slight_FilterMedianRingbuffer<T>::average(
     return value_result;
 }
 
-// uint16_t filter_median(uint8_t fader_id, uint16_t value_new) {
-//     uint16_t value_result = 0;
-//     // median
-//     uint8_t insert_pos = 0;
-//     if (
-//         (value_new < dataout_filter[fader_id][0]) ||
-//         (dataout_filter_index > 0)
-//     ) {
-//         insert_pos = 0;
-//     } else {
-//         while (
-//             !((dataout_filter[fader_id][insert_pos-1] <= value_new) &&
-//             (dataout_filter[fader_id][insert_pos] >= value_new))
-//         ) {
-//             /* code */
-//         }
-//
-//
-//         for (
-//             insert_pos = 1;
-//             insert_pos < dataout_filter_index;
-//             insert_pos++
-//         ) {
-//             if (
-//                 (dataout_filter[fader_id][insert_pos-1] <= value_new) &&
-//                 (dataout_filter[fader_id][insert_pos] >= value_new)
-//             ) {
-//                 // insert_pos is the correct position.
-//                 break;
-//             }
-//         }
-//     }
-//     // move all values higher than current insert position up one position.
-//     for (size_t k = dataout_filter_index; k > insert_pos; k--) {
-//         dataout_filter[fader_id][k] = dataout_filter[fader_id][k-1];
-//     }
-//     // set new value
-//     dataout_filter[fader_id][insert_pos] = value_new;
-//
-//     // increase index
-//     dataout_filter_index = dataout_filter_index +1;
-//     // wrap around
-//     // dataout_filter_index = dataout_filter_index % dataout_filter_count;
-//     if (dataout_filter_index >= dataout_filter_count) {
-//         dataout_filter_index = 0;
-//     }
-//
-//
-//     // average now
-// }
+template <class T>
+T slight_FilterMedianRingbuffer<T>::average_framed(
+    const T values[],
+    const size_t values_length,
+    const size_t frame_count
+) {
+    // calculate center
+    size_t outside_length = values_length - frame_count;
+    size_t start_offset = outside_length / 2;
+    size_t remainder_length = outside_length-start_offset;
+    return average(
+        values + start_offset*sizeof(T),
+        remainder_length);
+}
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #endif  // SLIGHT_FILTER_H_

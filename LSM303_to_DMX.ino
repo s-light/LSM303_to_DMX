@@ -76,6 +76,8 @@
 
 // #include <DMXSerial.h>
 
+#include <Wire.h>
+#include <LSM303.h>
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Info
@@ -180,6 +182,23 @@ bool dmx_valid = false;
 uint16_t dmx_start_channel = 80;
 uint8_t dmx_value = 0;
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// LSM303 compass
+
+LSM303 compass;
+
+uint32_t lsm303_read_timestamp_last = 0;
+const uint16_t lsm303_read_interval = 20;
+// 20ms = 50Hz = update rate for accelerometer
+
+
+bool lsm303_serial_out_enabled = false;
+uint32_t lsm303_serial_out_timestamp_last = 0;
+const uint16_t lsm303_serial_out_interval = 500;
+
+bool lsm303_dmx_send_enabled = false;
+uint32_t lsm303_dmx_send_timestamp_last = 0;
+const uint16_t lsm303_dmx_send_interval = 500;
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -297,7 +316,8 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
             out.println(F("\t 'Y': toggle DebugOut livesign LED"));
             out.println(F("\t 'x': tests"));
             out.println();
-            // out.println(F("\t 'A': Show 'HelloWorld' "));
+            out.println(F("\t 'a': toggle accelerometer serial output "));
+            out.println(F("\t 'A': toggle accelerometer dmx output "));
             // out.println(F("\t 's': set channel 's1:65535'"));
             // out.println(F("\t 'f': DemoFadeTo(ID, value) 'f1:65535'"));
             out.println();
@@ -507,6 +527,98 @@ void setup_DMX(Print &out) {
     out.println(F("\t finished."));
 }
 
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// LSM303 compass
+
+void setup_LSM303(Print &out) {
+    out.println(F("setup LSM303D:")); {
+        out.println(F("\t  start I2C"));
+        Wire.begin();
+        out.println(F("\t  init compass"));
+        compass.init();
+        out.println(F("\t  enable defaults"));
+        compass.enableDefault();
+    }
+    out.println(F("\tfinished."));
+}
+
+void handle_LSM303() {
+    if(
+        (millis() - lsm303_read_timestamp_last) > lsm303_read_interval
+    ) {
+        lsm303_read_timestamp_last =  millis();
+        lsm303_read();
+    }
+
+    if (lsm303_serial_out_enabled) {
+        if(
+            (millis() - lsm303_serial_out_timestamp_last) > lsm303_serial_out_interval
+        ) {
+            lsm303_serial_out_timestamp_last =  millis();
+            lsm303_serial_out_print();
+        }
+    }
+
+    if (lsm303_dmx_send_enabled) {
+        if(
+            (millis() - lsm303_dmx_send_timestamp_last) > lsm303_dmx_send_interval
+        ) {
+            lsm303_dmx_send_timestamp_last =  millis();
+            lsm303_dmx_send();
+        }
+    }
+}
+
+
+void lsm303_read() {
+        compass.read();
+
+        char line[24];
+        snprintf(
+            line,
+            sizeof(line),
+            "A: %6d %6d %6d;",
+            compass.a.x,
+            compass.a.y,
+            compass.a.z
+        );
+        DebugOut.println(line);
+}
+
+
+void lsm303_serial_out_print() {
+        compass.read();
+
+        char line[24];
+        snprintf(
+            line,
+            sizeof(line),
+            "A: %6d %6d %6d;",
+            compass.a.x,
+            compass.a.y,
+            compass.a.z
+        );
+        DebugOut.println(line);
+}
+
+
+void lsm303_dmx_send() {
+        compass.read();
+
+        char line[24];
+        snprintf(
+            line,
+            sizeof(line),
+            "A: %6d %6d %6d;",
+            compass.a.x,
+            compass.a.y,
+            compass.a.z
+        );
+        DebugOut.println(line);
+}
+
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // other things..
 
@@ -520,11 +632,11 @@ void setup() {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // initialise PINs
 
-        //LiveSign
-        pinMode(infoled_pin, OUTPUT);
-        digitalWrite(infoled_pin, HIGH);
+    //LiveSign
+    pinMode(infoled_pin, OUTPUT);
+    digitalWrite(infoled_pin, HIGH);
 
-        // as of arduino 1.0.1 you can use INPUT_PULLUP
+    // as of arduino 1.0.1 you can use INPUT_PULLUP
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -538,9 +650,11 @@ void setup() {
 
     setup_DMX(DebugOut);
 
+    setup_LSM303(DebugOut);
+
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // go
-        DebugOut.println(F("Loop:"));
+    DebugOut.println(F("Loop:"));
 
 } /** setup **/
 
@@ -550,35 +664,17 @@ void setup() {
 void loop() {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // menu input
-        myDebugMenu.update();
+    myDebugMenu.update();
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // update sub parts
 
-        button.update();
+    button.update();
 
+    handle_debugout();
 
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // timed things
+    handle_LSM303();
 
-        // if (sequencer_mode != sequencer_OFF) {
-        //     if(
-        //         (millis() - sequencer_timestamp_last) > sequencer_interval
-        //     ) {
-        //         sequencer_timestamp_last =  millis();
-        //         calculate_step();
-        //     }
-        // }
-
-
-
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // debug output
-
-
-
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // other things
 
 } /** loop **/
 

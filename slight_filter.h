@@ -119,10 +119,10 @@ size_t slight_FilterMedianRingbuffer<T>::add_value(T value_new) {
     values_raw[ringbuffer_index] = value_new;
     flag_dirty = true;
 
-    if (ringbuffer_index >= values_length) {
-        ringbuffer_index = 0;
-    } else {
+    if (ringbuffer_index+1 < values_length) {
         ringbuffer_index += 1;
+    } else {
+        ringbuffer_index = 0;
     }
     return ringbuffer_index;
 }
@@ -187,11 +187,11 @@ void slight_FilterMedianRingbuffer<T>::calculate_median() {
     // www.cplusplus.com/reference/cstdlib/qsort/
     // https://arduino.stackexchange.com/a/13257/13509
     qsort(values_sorted, values_length, sizeof(T), compare);
-    current_filterd_value = average(values_sorted, values_length);
-    // current_filterd_value = average_framed(
-    //     values_sorted,
-    //     values_length,
-    //     average_frame_length);
+    // current_filterd_value = average(values_sorted, values_length);
+    current_filterd_value = average_framed(
+        values_sorted,
+        values_length,
+        average_frame_length);
 }
 
 

@@ -100,7 +100,7 @@ class slight_FilterMedianRingbuffer {
  public:
     slight_FilterMedianRingbuffer(
         T values_raw_[],
-        T values_temp_[],
+        T values_sorted_[],
         size_t values_length_);
 
     ~slight_FilterMedianRingbuffer();
@@ -109,29 +109,40 @@ class slight_FilterMedianRingbuffer {
     T get_filterd_value();
     size_t get_ringbuffer_index();
 
-    static T average(T values[], size_t values_length);
+    void update();
+
     static T average_framed(
-        T values[], size_t values_length, size_t frame_count);
+        const T values[],
+        const size_t values_length,
+        const size_t frame_count);
+    static T average(const T values[], const size_t values_length);
 
  private:
     T *values_raw;
-    T *values_temp;
+    T *values_sorted;
     size_t values_length;
+
+    size_t average_frame_length;
+
     size_t ringbuffer_index = 0;
     bool flag_dirty = true;
+
     T current_filterd_value = 0;
+
     void calculate_median();
+    static int compare(const void* p1, const void* p2);
 };
 
 template <class T>
 slight_FilterMedianRingbuffer<T>::slight_FilterMedianRingbuffer(
     T values_raw_[],
-    T values_temp_[],
+    T values_sorted_[],
     size_t values_length_
 ) {
     values_raw = values_raw_;
-    values_temp = values_temp_;
+    values_sorted = values_sorted_;
     values_length = values_length_;
+    average_frame_length = values_length / 2;
 }
 
 template <class T>
@@ -167,22 +178,54 @@ size_t slight_FilterMedianRingbuffer<T>::get_ringbuffer_index() {
 }
 
 template <class T>
+void slight_FilterMedianRingbuffer<T>::update() {
+    if (flag_dirty) {
+        calculate_median();
+        flag_dirty = false;
+    }
+}
+
+template <class T>
+int slight_FilterMedianRingbuffer<T>::compare(
+    const void * arg1,
+    const void * arg2
+) {
+    // return ( *(T*)a - *(T*)b );
+    // cast to pointers to type T
+    // T * a = (T *) arg1;
+    // T * b = (T *) arg2;
+    const T * a = reinterpret_cast<const T *>(arg1);
+    const T * b = reinterpret_cast<const T *>(arg2);
+    return ( *a - *b );
+}
+
+template <class T>
 void slight_FilterMedianRingbuffer<T>::calculate_median() {
-    // values_raw[]
+    // copy values to sorted array
+    memcpy(values_sorted, values_raw, values_length * sizeof(T));
+    // sort values
+    // www.cplusplus.com/reference/cstdlib/qsort/
+    // https://arduino.stackexchange.com/a/13257/13509
+    qsort(values_sorted, values_length, sizeof(T), compare);
+    current_filterd_value = average(values_sorted, values_length);
+    // current_filterd_value = average_framed(
+    //     values_sorted,
+    //     values_length,
+    //     average_frame_length);
 }
 
 template <class T>
 T slight_FilterMedianRingbuffer<T>::average_framed(
-    T values[],
-    size_t values_length,
-    size_t frame_count
+    const T values[],
+    const size_t values_length,
+    const size_t frame_count
 ) {
     // calculate center
     size_t outside_length = values_length - frame_count;
     size_t start_offset = outside_length / 2;
     size_t remainder_length = outside_length-start_offset;
     return average(
-        values + start_offset,
+        values + start_offset*sizeof(T),
         remainder_length);
 }
 
@@ -224,7 +267,11 @@ T slight_FilterMedianRingbuffer<T>::average(
 //         }
 //
 //
-//         for (insert_pos = 1; insert_pos < dataout_filter_index; insert_pos++) {
+//         for (
+//             insert_pos = 1;
+//             insert_pos < dataout_filter_index;
+//             insert_pos++
+//         ) {
 //             if (
 //                 (dataout_filter[fader_id][insert_pos-1] <= value_new) &&
 //                 (dataout_filter[fader_id][insert_pos] >= value_new)

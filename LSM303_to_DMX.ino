@@ -206,7 +206,6 @@ const uint16_t lsm303_dmx_send_interval = 500;
 const size_t filter_size = 20;
 int16_t lsm303_a_x_raw[filter_size];
 int16_t lsm303_a_x_temp[filter_size];
-int16_t lsm303_a_x_filterd;
 slight_FilterMedianRingbuffer <int16_t> filter_a_x(
     lsm303_a_x_raw,
     lsm303_a_x_temp,
@@ -214,7 +213,6 @@ slight_FilterMedianRingbuffer <int16_t> filter_a_x(
 );
 int16_t lsm303_a_y_raw[filter_size];
 int16_t lsm303_a_y_temp[filter_size];
-int16_t lsm303_a_y_filterd;
 slight_FilterMedianRingbuffer <int16_t> filter_a_y(
     lsm303_a_y_raw,
     lsm303_a_y_temp,
@@ -222,7 +220,6 @@ slight_FilterMedianRingbuffer <int16_t> filter_a_y(
 );
 int16_t lsm303_a_z_raw[filter_size];
 int16_t lsm303_a_z_temp[filter_size];
-int16_t lsm303_a_z_filterd;
 slight_FilterMedianRingbuffer <int16_t> filter_a_z(
     lsm303_a_z_raw,
     lsm303_a_z_temp,
@@ -602,11 +599,14 @@ void handle_LSM303() {
 
 void lsm303_read() {
     compass.read();
-
-    // lsm303_a_x_filterd = filter_a_x.add_value(compass.a.x);
-    // lsm303_a_y_filterd = filter_a_y.add_value(compass.a.y);
-    // lsm303_a_z_filterd = filter_a_z.add_value(compass.a.z);
+    filter_a_x.add_value(compass.a.x);
+    filter_a_y.add_value(compass.a.y);
+    filter_a_z.add_value(compass.a.z);
+    filter_a_x.update();
+    filter_a_y.update();
+    filter_a_z.update();
 }
+
 
 
 void lsm303_serial_out_print() {
@@ -628,9 +628,9 @@ void lsm303_serial_out_print() {
             compass.a.x,
             compass.a.y,
             compass.a.z,
-            lsm303_a_x_filterd,
-            lsm303_a_y_filterd,
-            lsm303_a_z_filterd
+            filter_a_x.get_filterd_value(),
+            filter_a_y.get_filterd_value(),
+            filter_a_z.get_filterd_value()
         );
         DebugOut.println(line);
 }

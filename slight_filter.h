@@ -8,6 +8,10 @@
             http://www.elcojacobs.com/eleminating-noise-from-sensor-readings-on-arduino-with-digital-filtering/
         digitalSmooth
             http://playground.arduino.cc/Main/DigitalSmooth
+        RunningMedian
+            https://github.com/RobTillaart/Arduino/tree/master/libraries/RunningMedian
+        FastRunningMedian
+            http://forum.arduino.cc/index.php?topic=53081.msg1160999#msg1160999
 
 
 ******************************************************************************/

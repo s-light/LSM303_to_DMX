@@ -76,7 +76,7 @@
 // #include <slight_filter.h>
 #include "./slight_filter.h"
 
-// #include <DMXSerial.h>
+#include <DMXSerial.h>
 
 #include <Wire.h>
 #include <LSM303.h>
@@ -157,31 +157,48 @@ slight_DebugMenu myDebugMenu(DebugIn, DebugOut, 15);
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // button
 
-const uint8_t button_pin = A5;
+const uint16_t button_duration_Debounce      =   30;
+const uint16_t button_duration_HoldingDown   =  500;
+const uint16_t button_duration_ClickSingle   =   40;
+const uint16_t button_duration_ClickLong     = 1000;
+const uint16_t button_duration_ClickDouble   =  200;
 
-slight_ButtonInput button(
-    0,  // byte cbID_New
-    button_pin,  // byte cbPin_New,
-    button_getInput,  // tCbfuncGetInput cbfuncGetInput_New,
-    button_onEvent,  // tcbfOnEvent cbfCallbackOnEvent_New,
-      30,  // const uint16_t cwDuration_Debounce_New = 30,
-     500,  // const uint16_t cwDuration_HoldingDown_New = 1000,
-      50,  // const uint16_t cwDuration_ClickSingle_New =   50,
-     500,  // const uint16_t cwDuration_ClickLong_New =   3000,
-     500   // const uint16_t cwDuration_ClickDouble_New = 1000
-);
+const uint8_t button_1 = 0;
+// const uint8_t button_2 = 1;
+// const uint8_t button_3 = 2;
+// const uint8_t button_4 = 3;
+
+const uint8_t buttons_COUNT = 1;
+slight_ButtonInput buttons[buttons_COUNT] = {
+    // button_1
+    slight_ButtonInput(
+        button_1,
+        A5,
+        button_getInput,
+        button_onEvent,
+        button_duration_Debounce,
+        button_duration_HoldingDown,
+        button_duration_ClickSingle,
+        button_duration_ClickLong,
+        button_duration_ClickDouble
+    ),
+};
+
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DMX
 
 const uint8_t dmx_pin_direction = 4;
 
+// 3x16bit + 3x16bit + 1x16bit + 1x16bit + 2spare
+const uint16_t dmx_maxchannel_count = (3*2)+(3*2)+(1*2)+(1*2)+2;
+
 // timeout in milliseconds
 const uint32_t dmx_valid_timeout = 1000;
 
 bool dmx_valid = false;
 
-uint16_t dmx_start_channel = 80;
+uint16_t dmx_start_channel = 1;
 uint8_t dmx_value = 0;
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -194,16 +211,16 @@ const uint16_t lsm303_read_interval = 20;
 // 20ms = 50Hz = update rate for accelerometer
 
 
-bool lsm303_serial_out_enabled = false;
+bool lsm303_serial_out_enabled = true;
 uint32_t lsm303_serial_out_timestamp_last = 0;
-uint16_t lsm303_serial_out_interval = 100;
+uint16_t lsm303_serial_out_interval = 1000;
 
-bool lsm303_dmx_send_enabled = false;
+bool lsm303_dmx_send_enabled = true;
 uint32_t lsm303_dmx_send_timestamp_last = 0;
-uint16_t lsm303_dmx_send_interval = 500;
+uint16_t lsm303_dmx_send_interval = 50;
 
 
-const size_t filter_size = 20;
+const size_t filter_size = 30;
 int16_t lsm303_a_x_raw[filter_size];
 int16_t lsm303_a_x_sorted[filter_size];
 slight_FilterMedianRingbuffer <int16_t> filter_a_x(
@@ -223,6 +240,13 @@ int16_t lsm303_a_z_sorted[filter_size];
 slight_FilterMedianRingbuffer <int16_t> filter_a_z(
     lsm303_a_z_raw,
     lsm303_a_z_sorted,
+    filter_size
+);
+int16_t lsm303_heading_raw[filter_size];
+int16_t lsm303_heading_sorted[filter_size];
+slight_FilterMedianRingbuffer <int16_t> filter_heading(
+    lsm303_heading_raw,
+    lsm303_heading_sorted,
     filter_size
 );
 
@@ -360,11 +384,12 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
             out.println(F("\t 'a': toggle lsm303 serial output "));
             out.print(F("\t 'A': set lsm303 serial output interval 'i65535' ("));
             out.print(lsm303_serial_out_interval);
-            out.println();
+            out.println(F(")"));
             out.println(F("\t 'd': toggle lsm303 dmx output "));
             out.print(F("\t 'D': set lsm303 dmx send interval 'i65535' ("));
             out.print(lsm303_dmx_send_interval);
-            out.println();
+            out.println(F(")"));
+            out.println(F("\t 't': test send values"));
             // out.println(F("\t 's': set channel 's1:65535'"));
             // out.println(F("\t 'f': DemoFadeTo(ID, value) 'f1:65535'"));
             out.println();
@@ -392,21 +417,21 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
 
             out.println(F("nothing to do."));
 
-            // // uint16_t wTest = 65535;
-            // uint16_t wTest = atoi(&command[1]);
-            // out.print(F("wTest: "));
-            // out.print(wTest);
-            // out.println();
-            //
-            // out.print(F("1: "));
-            // out.print((byte)wTest);
-            // out.println();
-            //
-            // out.print(F("2: "));
-            // out.print((byte)(wTest>>8));
-            // out.println();
-            //
-            // out.println();
+            uint16_t value = 65535;
+            value = atoi(&command[1]);
+            out.print(F("value: "));
+            out.print(value);
+            out.println();
+
+            out.print(F("1: "));
+            out.print((byte)value);
+            out.println();
+
+            out.print(F("2: "));
+            out.print((byte)(value>>8));
+            out.println();
+
+            out.println();
 
             out.println(F("__________"));
         } break;
@@ -460,6 +485,28 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
             out.print(value);
             out.println();
             lsm303_dmx_send_interval = value;
+        } break;
+        case 't': {
+            out.print(F("\t test send dmx values "));
+            int16_t value = filter_a_y.get_filterd_value();
+            if (&command[1] != '\0') {
+                // value = random(-10000, +30000);
+                value = atoi(&command[1]);
+            }
+            out.print(value);
+            out.print(F(" = "));
+            out.print(uint16_t(value));
+            out.print(F(" = "));
+            out.print(uint8_t(value));
+            out.print(F(" : "));
+            out.print(uint8_t(value >> 8));
+
+            out.println();
+
+            dmx_send_int16(1, value);
+            dmx_send_int16(3, value);
+            dmx_send_int16(5, value);
+            dmx_send_int16(7, value);
         } break;
         // ------------------------------------------
         // case 's': {
@@ -524,12 +571,22 @@ void setup_buttons(Print &out) {
     out.println(freeRam());
 
     out.println(F("setup button:")); {
-        out.println(F("\t set button pin"));
-        pinMode(button_pin, INPUT_PULLUP);
-        out.println(F("\t button begin"));
-        button.begin();
+        // out.println(F("\t set button pin"));
+        // pinMode(button_pin, INPUT_PULLUP);
+        // out.println(F("\t button begin"));
+        // button.begin();
+        for (size_t index = 0; index < buttons_COUNT; index++) {
+            pinMode(buttons[index].getPin(), INPUT_PULLUP);
+            buttons[index].begin();
+        }
     }
     out.println(F("\t finished."));
+}
+
+void buttons_update() {
+    for (size_t index = 0; index < buttons_COUNT; index++) {
+        buttons[index].update();
+    }
 }
 
 boolean button_getInput(uint8_t id, uint8_t pin) {
@@ -604,10 +661,14 @@ void setup_DMX(Print &out) {
     // DMXSerial.init(DMXReceiver, dmx_pin_direction);
 
     // set to send mode
-    // Serial.println(F("\t set direction pin to High = 'Send' "));
-    // digitalWrite(dmx_pin_direction, HIGH);
-    // Serial.println(F("\t init as DMXController"));
-    // DMXSerial.init(DMXController, dmx_pin_direction);
+    Serial.println(F("\t set direction pin to High = 'Send' "));
+    digitalWrite(dmx_pin_direction, HIGH);
+    Serial.println(F("\t init as DMXController"));
+    DMXSerial.init(DMXController, dmx_pin_direction);
+    Serial.print(F("\t set maxChannel to "));
+    Serial.print(dmx_maxchannel_count);
+    Serial.println();
+    DMXSerial.maxChannel(dmx_maxchannel_count);
 
 
 
@@ -621,6 +682,15 @@ void setup_DMX(Print &out) {
     out.println(F("\t finished."));
 }
 
+
+void dmx_send_uint16(size_t ch, uint16_t value) {
+    DMXSerial.write(ch + 0, uint8_t(value >> 8));
+    DMXSerial.write(ch + 1, uint8_t(value));
+}
+
+void dmx_send_int16(size_t ch, int16_t value) {
+    dmx_send_uint16(ch, uint16_t(value));
+}
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // LSM303 compass
@@ -667,12 +737,14 @@ void handle_LSM303() {
 
 void lsm303_read() {
     compass.read();
-    // filter_a_x.add_value(compass.a.x);
+    filter_a_x.add_value(compass.a.x);
     filter_a_y.add_value(compass.a.y);
-    // filter_a_z.add_value(compass.a.z);
-    // filter_a_x.update();
+    filter_a_z.add_value(compass.a.z);
+    filter_a_x.update();
     filter_a_y.update();
-    // filter_a_z.update();
+    filter_a_z.update();
+    filter_heading.add_value(compass.heading());
+    filter_heading.update();
 }
 
 
@@ -688,46 +760,64 @@ void lsm303_serial_out_print() {
         //     compass.a.z
         // );
 
-        char line[60];
-        snprintf(
-            line,
-            sizeof(line),
-            // "A: %6d %6d %6d; AF: %6d %6d %6d;",
-            "A: %6d %6d",
-            compass.a.y,
-            filter_a_y.get_filterd_value()
-        );
         // char line[60];
         // snprintf(
         //     line,
         //     sizeof(line),
         //     // "A: %6d %6d %6d; AF: %6d %6d %6d;",
-        //     "A: %6d %6d %6d; AF: %6d",
+        //     "A: %6d %6d",
+        //     compass.a.y,
+        //     filter_a_y.get_filterd_value()
+        // );
+
+        // char line[60];
+        // snprintf(
+        //     line,
+        //     sizeof(line),
+        //     "A: %6d %6d %6d F: %6d %6d %6d",
         //     compass.a.x,
         //     compass.a.y,
         //     compass.a.z,
-        //     filter_a_x.get_filterd_value()
-        //     // filter_a_y.get_filterd_value(),
-        //     // filter_a_z.get_filterd_value()
+        //     filter_a_x.get_filterd_value(),
+        //     filter_a_y.get_filterd_value(),
+        //     filter_a_z.get_filterd_value()
         // );
+
+
+        // char line[60];
+        // snprintf(
+        //     line,
+        //     sizeof(line),
+        //     "A: %6d %6d %6d M: %6d %6d %6d H: %3d",
+        //     filter_a_x.get_filterd_value(),
+        //     filter_a_y.get_filterd_value(),
+        //     filter_a_z.get_filterd_value(),
+        //     compass.m.x,
+        //     compass.m.y,
+        //     compass.m.z,
+        //     filter_heading.get_filterd_value()
+        // );
+
+        char line[60];
+        snprintf(
+            line,
+            sizeof(line),
+            "A: %6d %6d %6d H: %3d",
+            filter_a_x.get_filterd_value(),
+            filter_a_y.get_filterd_value(),
+            filter_a_z.get_filterd_value(),
+            filter_heading.get_filterd_value()
+        );
 
         DebugOut.println(line);
 }
 
 
 void lsm303_dmx_send() {
-        compass.read();
-
-        char line[24];
-        snprintf(
-            line,
-            sizeof(line),
-            "A: %6d %6d %6d;",
-            compass.a.x,
-            compass.a.y,
-            compass.a.z
-        );
-        DebugOut.println(line);
+    dmx_send_int16(1, filter_a_x.get_filterd_value());
+    dmx_send_int16(3, filter_a_y.get_filterd_value());
+    dmx_send_int16(5, filter_a_z.get_filterd_value());
+    dmx_send_int16(7, filter_heading.get_filterd_value());
 }
 
 
@@ -768,7 +858,7 @@ void setup() {
     // go
     DebugOut.println(F("Loop:"));
 
-} /** setup **/
+}
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // main loop
@@ -781,14 +871,13 @@ void loop() {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // update sub parts
 
-    button.update();
+    buttons_update();
 
     handle_debugout();
 
     handle_LSM303();
 
-
-} /** loop **/
+}
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // THE END

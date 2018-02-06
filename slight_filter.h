@@ -65,6 +65,12 @@ class slight_FilterMedianRingbuffer {
         T values_sorted_[],
         size_t values_length_);
 
+    slight_FilterMedianRingbuffer(
+        T values_raw_[],
+        T values_sorted_[],
+        size_t values_length_,
+        size_t average_frame_length_);
+
     ~slight_FilterMedianRingbuffer();
 
     size_t add_value(T value_new);
@@ -111,6 +117,19 @@ slight_FilterMedianRingbuffer<T>::slight_FilterMedianRingbuffer(
     values_sorted = values_sorted_;
     values_length = values_length_;
     average_frame_length = values_length / 2;
+}
+
+template <class T>
+slight_FilterMedianRingbuffer<T>::slight_FilterMedianRingbuffer(
+    T values_raw_[],
+    T values_sorted_[],
+    size_t values_length_,
+    size_t average_frame_length_
+) {
+    values_raw = values_raw_;
+    values_sorted = values_sorted_;
+    values_length = values_length_;
+    set_average_frame_length(average_frame_length_);
 }
 
 template <class T>

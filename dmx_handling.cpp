@@ -116,7 +116,7 @@ void print_values(Print &out) {
     snprintf(
         line,
         sizeof(line),
-        "A: %3u %3u %3u H: %3u T: %3u",
+        "dmx -> A: %3u %3u %3u H: %3u T: %3u",
         values[ch_a_x],
         values[ch_a_y],
         values[ch_a_z],

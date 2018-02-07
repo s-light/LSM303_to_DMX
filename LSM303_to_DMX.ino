@@ -205,7 +205,7 @@ void setup_DebugOut(Print &out) {
     // for ATmega32U4 devices:
     #if defined (__AVR_ATmega32U4__)
         // wait for arduino IDE to release all serial ports after upload.
-        // delay(2000);
+        delay(1000);
     #endif
 
     Serial.begin(115200);

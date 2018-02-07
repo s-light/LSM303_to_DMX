@@ -60,6 +60,16 @@ void dmx_send_int16(channel_names name, int16_t value) {
     dmx_send_uint16(chname2chindex(name) + 1, uint16_t(value));
 }
 
+void send_int16_mapped_to_uint8(
+    channel_names name,
+    int16_t value,
+    int16_t low,
+    int16_t high
+) {
+    uint8_t value_uint8 = map(constrain(value, low, high), low, high, 0, 255);
+    DMXSerial.write(uint16_t(name) + 1, value_uint8);
+}
+
 
 void print_values(Print &out) {
     char line[100];

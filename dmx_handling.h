@@ -64,9 +64,14 @@ extern bool dmx_valid;
 extern uint16_t dmx_start_channel;
 
 size_t chname2chindex(channel_names name);
-void dmx_send_uint16(size_t ch, uint16_t value);
-void dmx_send_int16(size_t ch, int16_t value);
-void dmx_send_int16(channel_names name, int16_t value);
+void send_uint16(size_t ch, uint16_t value);
+void send_int16(size_t ch, int16_t value);
+void send_int16(channel_names name, int16_t value);
+void send_int16_mapped_to_uint8(
+    channel_names name,
+    int16_t value,
+    int16_t low,
+    int16_t high);
 void print_values(Print &out);
 
 void setup(Print &out);

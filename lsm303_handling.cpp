@@ -266,24 +266,29 @@ void dmx_send() {
     // dmx_handling::dmx_send_int16(
     //     dmx_handling::ch_temp, filter_temp.get_filterd_value());
 
-    uint8_t value = 0;
-    value = map(constrain(filter_a_x.get_filterd_value(),
-        -17000, 17000), -17000, 17000, 0, 255);
-    DMXSerial.write(uint16_t(dmx_handling::ch_a_x) + 1, value);
-    value = map(constrain(filter_a_y.get_filterd_value(),
-        -17000, 17000), -17000, 17000, 0, 255);
-    DMXSerial.write(uint16_t(dmx_handling::ch_a_y) + 1, value);
-    value = map(constrain(filter_a_z.get_filterd_value(),
-        -17000, 17000), -17000, 17000, 0, 255);
-    DMXSerial.write(uint16_t(dmx_handling::ch_a_z) + 1, value);
 
-    value = map(constrain(filter_heading.get_filterd_value(),
-        0, 359), 0, 359, 0, 255);
-    DMXSerial.write(uint16_t(dmx_handling::ch_heading) + 1, value);
+    dmx_handling::send_int16_mapped_to_uint8(
+        dmx_handling::ch_a_x,
+        filter_a_x.get_filterd_value(),
+        -17000, 17000);
+    dmx_handling::send_int16_mapped_to_uint8(
+        dmx_handling::ch_a_y,
+        filter_a_y.get_filterd_value(),
+        -17000, 17000);
+    dmx_handling::send_int16_mapped_to_uint8(
+        dmx_handling::ch_a_z,
+        filter_a_z.get_filterd_value(),
+        -17000, 17000);
 
-    value = map(constrain(filter_temp.get_filterd_value(),
-        -50, 50), -50, 50, 0, 255);
-    DMXSerial.write(uint16_t(dmx_handling::ch_temp) + 1, value);
+    dmx_handling::send_int16_mapped_to_uint8(
+        dmx_handling::ch_heading,
+        filter_heading.get_filterd_value(),
+         0, 359);
+
+    dmx_handling::send_int16_mapped_to_uint8(
+        dmx_handling::ch_temp,
+        filter_temp.get_filterd_value(),
+        -50, 50);
 }
 
 

@@ -45,17 +45,20 @@ enum channel_names {
     ch_a_x,
     ch_a_y,
     ch_a_z,
-    ch_m_x,
-    ch_m_y,
-    ch_m_z,
+    // ch_m_x,
+    // ch_m_y,
+    // ch_m_z,
     ch_heading,
     ch_temp,
 };
-const size_t values_count = 8;
+// const size_t values_count = 8;
+const size_t values_count = 5;
 extern size_t values_dirty;
-extern int16_t values[];
+// extern int16_t values[];
+extern uint8_t values[];
 
-const uint16_t dmx_maxchannel_count = values_count*2;
+// const uint16_t dmx_maxchannel_count = values_count*2;
+const uint16_t dmx_maxchannel_count = values_count;
 
 extern bool dmx_valid;
 extern uint16_t dmx_start_channel;

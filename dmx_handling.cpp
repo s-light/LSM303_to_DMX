@@ -39,7 +39,8 @@ bool effect_control = false;
 // const size_t values_count = dmx_maxchannel_count / (int16_t);
 // const size_t values_count = 8;
 size_t values_dirty = 0b00000000;
-int16_t values[values_count];
+// int16_t values[values_count];
+uint8_t values[values_count];
 
 
 size_t chname2chindex(channel_names name) {
@@ -62,21 +63,29 @@ void dmx_send_int16(channel_names name, int16_t value) {
 
 void print_values(Print &out) {
     char line[100];
+    // snprintf(
+    //     line,
+    //     sizeof(line),
+    //     "A: %6d %6d %6d M: %6d %6d %6d H: %6d T: %6d",
+    //     values[ch_a_x],
+    //     values[ch_a_y],
+    //     values[ch_a_z],
+    //     values[ch_m_x],
+    //     values[ch_m_y],
+    //     values[ch_m_z],
+    //     values[ch_heading],
+    //     values[ch_temp]);
     snprintf(
         line,
         sizeof(line),
-        "A: %6d %6d %6d M: %6d %6d %6d H: %6d T: %6d",
+        "A: %3u %3u %3u H: %3u T: %3u",
         values[ch_a_x],
         values[ch_a_y],
         values[ch_a_z],
-        values[ch_m_x],
-        values[ch_m_y],
-        values[ch_m_z],
         values[ch_heading],
         values[ch_temp]);
     out.println(line);
 }
-
 
 
 // private functions
@@ -121,6 +130,10 @@ void setup(Print &out) {
     // set to send mode
     Serial.println(F("\t init as DMXController"));
     DMXSerial.init(DMXController, dmx_pin_direction);
+
+    Serial.print(F("\t set maxChannel "));
+    Serial.println(dmx_maxchannel_count);
+    DMXSerial.maxChannel(dmx_maxchannel_count);
 
     // Serial.println(F("\t set some values"));
     // DMXSerial.write(10, 255);

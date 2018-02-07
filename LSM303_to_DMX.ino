@@ -512,28 +512,36 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
         } break;
         case 't': {
             out.print(F("\t test send dmx values "));
-            int16_t value = filter_a_y.get_filterd_value();
+            // int16_t value = filter_a_y.get_filterd_value();
+            uint8_t value = 0;
+            value = map(constrain(filter_a_y.get_filterd_value(),
+                -17000, 17000), -17000, 17000, 0, 255);
             if (&command[1] != '\0') {
                 // value = random(-10000, +30000);
                 value = atoi(&command[1]);
             }
             out.print(value);
-            out.print(F(" = "));
-            out.print(uint16_t(value));
-            out.print(F(" = "));
-            out.print(uint8_t(value));
-            out.print(F(" : "));
-            out.print(uint8_t(value >> 8));
+            // out.print(F(" = "));
+            // out.print(uint16_t(value));
+            // out.print(F(" = "));
+            // out.print(uint8_t(value));
+            // out.print(F(" : "));
+            // out.print(uint8_t(value >> 8));
             out.println();
 
-            dmx_handling::dmx_send_int16(dmx_handling::ch_a_x, value);
-            dmx_handling::dmx_send_int16(dmx_handling::ch_a_y, value);
-            dmx_handling::dmx_send_int16(dmx_handling::ch_a_z, value);
-            dmx_handling::dmx_send_int16(dmx_handling::ch_m_x, value);
-            dmx_handling::dmx_send_int16(dmx_handling::ch_m_y, value);
-            dmx_handling::dmx_send_int16(dmx_handling::ch_m_z, value);
-            dmx_handling::dmx_send_int16(dmx_handling::ch_heading, value);
-            dmx_handling::dmx_send_int16(dmx_handling::ch_temp, value);
+            // dmx_handling::dmx_send_int16(dmx_handling::ch_a_x, value);
+            // dmx_handling::dmx_send_int16(dmx_handling::ch_a_y, value);
+            // dmx_handling::dmx_send_int16(dmx_handling::ch_a_z, value);
+            // dmx_handling::dmx_send_int16(dmx_handling::ch_m_x, value);
+            // dmx_handling::dmx_send_int16(dmx_handling::ch_m_y, value);
+            // dmx_handling::dmx_send_int16(dmx_handling::ch_m_z, value);
+            // dmx_handling::dmx_send_int16(dmx_handling::ch_heading, value);
+            // dmx_handling::dmx_send_int16(dmx_handling::ch_temp, value);
+            DMXSerial.write(dmx_handling::ch_a_x, value);
+            DMXSerial.write(dmx_handling::ch_a_y, value);
+            DMXSerial.write(dmx_handling::ch_a_z, value);
+            DMXSerial.write(dmx_handling::ch_heading, value);
+            DMXSerial.write(dmx_handling::ch_temp, value);
         } break;
         // ------------------------------------------
         // case 's': {
@@ -804,22 +812,41 @@ void lsm303_serial_out_print() {
 
 
 void lsm303_dmx_send() {
-    dmx_handling::dmx_send_int16(
-        dmx_handling::ch_a_x, filter_a_x.get_filterd_value());
-    dmx_handling::dmx_send_int16(
-        dmx_handling::ch_a_y, filter_a_y.get_filterd_value());
-    dmx_handling::dmx_send_int16(
-        dmx_handling::ch_a_z, filter_a_z.get_filterd_value());
-    dmx_handling::dmx_send_int16(
-        dmx_handling::ch_m_x, filter_m_x.get_filterd_value());
-    dmx_handling::dmx_send_int16(
-        dmx_handling::ch_m_y, filter_m_y.get_filterd_value());
-    dmx_handling::dmx_send_int16(
-        dmx_handling::ch_m_z, filter_m_z.get_filterd_value());
-    dmx_handling::dmx_send_int16(
-        dmx_handling::ch_heading, filter_heading.get_filterd_value());
-    dmx_handling::dmx_send_int16(
-        dmx_handling::ch_temp, filter_temp.get_filterd_value());
+    // dmx_handling::dmx_send_int16(
+    //     dmx_handling::ch_a_x, filter_a_x.get_filterd_value());
+    // dmx_handling::dmx_send_int16(
+    //     dmx_handling::ch_a_y, filter_a_y.get_filterd_value());
+    // dmx_handling::dmx_send_int16(
+    //     dmx_handling::ch_a_z, filter_a_z.get_filterd_value());
+    // dmx_handling::dmx_send_int16(
+    //     dmx_handling::ch_m_x, filter_m_x.get_filterd_value());
+    // dmx_handling::dmx_send_int16(
+    //     dmx_handling::ch_m_y, filter_m_y.get_filterd_value());
+    // dmx_handling::dmx_send_int16(
+    //     dmx_handling::ch_m_z, filter_m_z.get_filterd_value());
+    // dmx_handling::dmx_send_int16(
+    //     dmx_handling::ch_heading, filter_heading.get_filterd_value());
+    // dmx_handling::dmx_send_int16(
+    //     dmx_handling::ch_temp, filter_temp.get_filterd_value());
+
+    uint8_t value = 0;
+    value = map(constrain(filter_a_x.get_filterd_value(),
+        -17000, 17000), -17000, 17000, 0, 255);
+    DMXSerial.write(uint16_t(dmx_handling::ch_a_x) + 1, value);
+    value = map(constrain(filter_a_y.get_filterd_value(),
+        -17000, 17000), -17000, 17000, 0, 255);
+    DMXSerial.write(uint16_t(dmx_handling::ch_a_y) + 1, value);
+    value = map(constrain(filter_a_z.get_filterd_value(),
+        -17000, 17000), -17000, 17000, 0, 255);
+    DMXSerial.write(uint16_t(dmx_handling::ch_a_z) + 1, value);
+
+    value = map(constrain(filter_heading.get_filterd_value(),
+        0, 359), 0, 359, 0, 255);
+    DMXSerial.write(uint16_t(dmx_handling::ch_heading) + 1, value);
+
+    value = map(constrain(filter_temp.get_filterd_value(),
+        -50, 50), -50, 50, 0, 255);
+    DMXSerial.write(uint16_t(dmx_handling::ch_temp) + 1, value);
 }
 
 

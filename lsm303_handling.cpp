@@ -36,7 +36,9 @@ namespace lsm303_handling {
 
 LSM303 compass;
 
+bool read_enabled = true;
 uint32_t read_timestamp_last = 0;
+uint16_t read_interval = 20;
 
 bool serial_out_enabled = false;
 uint32_t serial_out_timestamp_last = 0;
@@ -71,30 +73,32 @@ slight_FilterMedianRingbuffer <int16_t> filter_a_z(
     filter_size,
     filter_average_frame_length
 );
-int16_t filter_array_m_x_raw[filter_size];
-int16_t filter_array_m_x_sorted[filter_size];
-slight_FilterMedianRingbuffer <int16_t> filter_m_x(
-    filter_array_m_x_raw,
-    filter_array_m_x_sorted,
-    filter_size,
-    filter_average_frame_length
-);
-int16_t filter_array_m_y_raw[filter_size];
-int16_t filter_array_m_y_sorted[filter_size];
-slight_FilterMedianRingbuffer <int16_t> filter_m_y(
-    filter_array_m_y_raw,
-    filter_array_m_y_sorted,
-    filter_size,
-    filter_average_frame_length
-);
-int16_t filter_array_m_z_raw[filter_size];
-int16_t filter_array_m_z_sorted[filter_size];
-slight_FilterMedianRingbuffer <int16_t> filter_m_z(
-    filter_array_m_z_raw,
-    filter_array_m_z_sorted,
-    filter_size,
-    filter_average_frame_length
-);
+
+// int16_t filter_array_m_x_raw[filter_size];
+// int16_t filter_array_m_x_sorted[filter_size];
+// slight_FilterMedianRingbuffer <int16_t> filter_m_x(
+//     filter_array_m_x_raw,
+//     filter_array_m_x_sorted,
+//     filter_size,
+//     filter_average_frame_length
+// );
+// int16_t filter_array_m_y_raw[filter_size];
+// int16_t filter_array_m_y_sorted[filter_size];
+// slight_FilterMedianRingbuffer <int16_t> filter_m_y(
+//     filter_array_m_y_raw,
+//     filter_array_m_y_sorted,
+//     filter_size,
+//     filter_average_frame_length
+// );
+// int16_t filter_array_m_z_raw[filter_size];
+// int16_t filter_array_m_z_sorted[filter_size];
+// slight_FilterMedianRingbuffer <int16_t> filter_m_z(
+//     filter_array_m_z_raw,
+//     filter_array_m_z_sorted,
+//     filter_size,
+//     filter_average_frame_length
+// );
+
 int16_t filter_array_heading_raw[filter_size];
 int16_t filter_array_heading_sorted[filter_size];
 slight_FilterMedianRingbuffer <int16_t> filter_heading(
@@ -103,14 +107,15 @@ slight_FilterMedianRingbuffer <int16_t> filter_heading(
     filter_size,
     filter_average_frame_length
 );
-int16_t filter_array_temp_raw[filter_size];
-int16_t filter_array_temp_sorted[filter_size];
-slight_FilterMedianRingbuffer <int16_t> filter_temp(
-    filter_array_temp_raw,
-    filter_array_temp_sorted,
-    filter_size,
-    filter_average_frame_length
-);
+
+// int16_t filter_array_temp_raw[filter_size];
+// int16_t filter_array_temp_sorted[filter_size];
+// slight_FilterMedianRingbuffer <int16_t> filter_temp(
+//     filter_array_temp_raw,
+//     filter_array_temp_sorted,
+//     filter_size,
+//     filter_average_frame_length
+// );
 
 
 void serial_out_print(Print &out);
@@ -134,26 +139,22 @@ void setup(Print &out) {
 }
 
 void update(Print &out) {
-    if (
-        (millis() - read_timestamp_last) > read_interval
-    ) {
-        read_timestamp_last =  millis();
-        sensor_read();
+    if (read_enabled) {
+        if ((millis() - read_timestamp_last) > read_interval) {
+            read_timestamp_last =  millis();
+            sensor_read();
+        }
     }
 
     if (serial_out_enabled) {
-        if (
-            (millis() - serial_out_timestamp_last) > serial_out_interval
-        ) {
+        if ((millis() - serial_out_timestamp_last) > serial_out_interval) {
             serial_out_timestamp_last =  millis();
             serial_out_print(out);
         }
     }
 
     if (dmx_send_enabled) {
-        if (
-            (millis() - dmx_send_timestamp_last) > dmx_send_interval
-        ) {
+        if ((millis() - dmx_send_timestamp_last) > dmx_send_interval) {
             dmx_send_timestamp_last =  millis();
             dmx_send();
         }
@@ -168,16 +169,16 @@ void sensor_read() {
     filter_a_x.update();
     filter_a_y.update();
     filter_a_z.update();
-    filter_m_x.add_value(compass.m.x);
-    filter_m_y.add_value(compass.m.y);
-    filter_m_z.add_value(compass.m.z);
-    filter_m_x.update();
-    filter_m_y.update();
-    filter_m_z.update();
+    // filter_m_x.add_value(compass.m.x);
+    // filter_m_y.add_value(compass.m.y);
+    // filter_m_z.add_value(compass.m.z);
+    // filter_m_x.update();
+    // filter_m_y.update();
+    // filter_m_z.update();
     filter_heading.add_value(compass.heading());
     filter_heading.update();
-    filter_temp.add_value(-22);
-    filter_temp.update();
+    // filter_temp.add_value(42);
+    // filter_temp.update();
 }
 
 
@@ -230,19 +231,29 @@ void serial_out_print(Print &out) {
         //     filter_heading.get_filterd_value()
         // );
 
+        // char line[100];
+        // snprintf(
+        //     line,
+        //     sizeof(line),
+        //     "A: %6d %6d %6d M: %6d %6d %6d H: %6d T: %6d",
+        //     filter_a_x.get_filterd_value(),
+        //     filter_a_y.get_filterd_value(),
+        //     filter_a_z.get_filterd_value(),
+        //     filter_m_x.get_filterd_value(),
+        //     filter_m_y.get_filterd_value(),
+        //     filter_m_z.get_filterd_value(),
+        //     filter_heading.get_filterd_value(),
+        //     filter_temp.get_filterd_value());
+
         char line[100];
         snprintf(
             line,
             sizeof(line),
-            "A: %6d %6d %6d M: %6d %6d %6d H: %6d T: %6d",
+            "A: %6d %6d %6d H: %6d",
             filter_a_x.get_filterd_value(),
             filter_a_y.get_filterd_value(),
             filter_a_z.get_filterd_value(),
-            filter_m_x.get_filterd_value(),
-            filter_m_y.get_filterd_value(),
-            filter_m_z.get_filterd_value(),
-            filter_heading.get_filterd_value(),
-            filter_temp.get_filterd_value());
+            filter_heading.get_filterd_value());
 
         out.println(line);
 }
@@ -285,10 +296,11 @@ void dmx_send() {
         filter_heading.get_filterd_value(),
          0, 359);
 
-    dmx_handling::send_int16_mapped_to_uint8(
-        dmx_handling::ch_temp,
-        filter_temp.get_filterd_value(),
-        -50, 50);
+    // dmx_handling::send_int16_mapped_to_uint8(
+    //     dmx_handling::ch_temp,
+    //     filter_temp.get_filterd_value(),
+    //     0, 255);
+    dmx_handling::send_uint8(dmx_handling::ch_temp, 42);
 }
 
 

@@ -30,6 +30,9 @@
 #include "./dmx_handling.h"
 
 namespace dmx_handling {
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// definitions
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 bool dmx_valid = false;
 uint16_t dmx_start_channel = 1;
@@ -42,22 +45,44 @@ size_t values_dirty = 0b00000000;
 // int16_t values[values_count];
 uint8_t values[values_count];
 
+bool serial_out_enabled = false;
+uint32_t serial_out_timestamp_last = 0;
+uint16_t serial_out_interval = 1000;
+
+
+void print_values(Print &out);
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// functions
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 size_t chname2chindex(channel_names name) {
     return (name*2);
 }
 
-void dmx_send_uint16(size_t ch, uint16_t value) {
+
+void send_uint8(channel_names name, uint8_t value) {
+    values[name] = value;
+    DMXSerial.write(uint16_t(name) + 1, value);
+}
+
+void send_uint16(size_t ch, uint16_t value) {
     DMXSerial.write(ch + 0, uint8_t(value >> 8));
     DMXSerial.write(ch + 1, uint8_t(value));
 }
 
-void dmx_send_int16(size_t ch, int16_t value) {
-    dmx_send_uint16(ch, uint16_t(value));
+void send_int16(size_t ch, int16_t value) {
+    send_uint16(ch, uint16_t(value));
 }
 
-void dmx_send_int16(channel_names name, int16_t value) {
-    dmx_send_uint16(chname2chindex(name) + 1, uint16_t(value));
+void send_int16(channel_names name, int16_t value) {
+    values[name] = value;
+    send_uint16(chname2chindex(name) + 1, uint16_t(value));
+}
+
+uint8_t map_int16_to_uint8(int16_t value, int16_t low, int16_t high) {
+    return map(constrain(value, low, high), low, high, 0, 255);
 }
 
 void send_int16_mapped_to_uint8(
@@ -66,9 +91,12 @@ void send_int16_mapped_to_uint8(
     int16_t low,
     int16_t high
 ) {
-    uint8_t value_uint8 = map(constrain(value, low, high), low, high, 0, 255);
+    uint8_t value_uint8 = map_int16_to_uint8(value, low, high);
+    values[name] = value_uint8;
     DMXSerial.write(uint16_t(name) + 1, value_uint8);
 }
+
+
 
 
 void print_values(Print &out) {
@@ -94,6 +122,25 @@ void print_values(Print &out) {
         values[ch_a_z],
         values[ch_heading],
         values[ch_temp]);
+    out.println(line);
+}
+
+void print_raw(Print &out) {
+    char line[100];
+    snprintf(
+        line,
+        sizeof(line),
+        "[%3u, %3u, %3u, %3u, %3u, %3u, %3u, %3u, %3u, %3u]",
+        DMXSerial.read(1),
+        DMXSerial.read(2),
+        DMXSerial.read(3),
+        DMXSerial.read(4),
+        DMXSerial.read(5),
+        DMXSerial.read(6),
+        DMXSerial.read(7),
+        DMXSerial.read(8),
+        DMXSerial.read(9),
+        DMXSerial.read(10));
     out.println(line);
 }
 
@@ -155,7 +202,16 @@ void setup(Print &out) {
     out.println(F("\t finished."));
 }
 
-void update() {
+void update(Print &out) {
+    if (serial_out_enabled) {
+        if (
+            (millis() - serial_out_timestamp_last) > serial_out_interval
+        ) {
+            serial_out_timestamp_last =  millis();
+            print_values(out);
+            // print_raw(out);
+        }
+    }
     // bool dmx_valid_new = false;
     // if (DMXSerial.noDataSince() < dmx_valid_timeout) {
     //     dmx_valid_new = true;

@@ -301,6 +301,12 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
             // out.println(F("\t 'w': add random value"));
             // out.println(F("\t 'e': print filterd value"));
             out.println();
+            out.print(F("\t 'r': toggle lsm303 read ("));
+            out.print(lsm303_handling::read_enabled);
+            out.println(F(")"));
+            out.print(F("\t 'R': set lsm303 read interval 'i65535' ("));
+            out.print(lsm303_handling::read_interval);
+            out.println(F(")"));
             out.print(F("\t 'a': toggle lsm303 serial output ("));
             out.print(lsm303_handling::serial_out_enabled);
             out.println(F(")"));
@@ -313,7 +319,14 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
             out.print(F("\t 'D': set lsm303 dmx send interval 'i65535' ("));
             out.print(lsm303_handling::dmx_send_interval);
             out.println(F(")"));
-            out.println(F("\t 't': test send values"));
+            out.print(F("\t 'e': toggle dmx serial out ("));
+            out.print(dmx_handling::serial_out_enabled);
+            out.println(F(")"));
+            out.print(F("\t 'E': set dmx serial out interval 'i65535' ("));
+            out.print(dmx_handling::serial_out_interval);
+            out.println(F(")"));
+            out.println(F("\t 't': test send values 't255'"));
+            out.println(F("\t 'T': test fill filters 't-30000'"));
             // out.println(F("\t 's': set channel 's1:65535'"));
             // out.println(F("\t 'f': DemoFadeTo(ID, value) 'f1:65535'"));
             out.println();
@@ -341,21 +354,31 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
 
             out.println(F("nothing to do."));
 
-            uint16_t value = 65535;
-            value = atoi(&command[1]);
-            out.print(F("value: "));
-            out.print(value);
-            out.println();
+            // dmx_handling::send_int16_mapped_to_uint8(
+            //     dmx_handling::ch_heading,
+            //     lsm303_handling::filter_heading.get_filterd_value(),
+            //      0, 359);
+            //
+            // dmx_handling::send_int16_mapped_to_uint8(
+            //     dmx_handling::ch_temp,
+            //     lsm303_handling::filter_temp.get_filterd_value(),
+            //     -50, 50);
 
-            out.print(F("1: "));
-            out.print((byte)value);
-            out.println();
-
-            out.print(F("2: "));
-            out.print((byte)(value>>8));
-            out.println();
-
-            out.println();
+            // uint16_t value = 65535;
+            // value = atoi(&command[1]);
+            // out.print(F("value: "));
+            // out.print(value);
+            // out.println();
+            //
+            // out.print(F("1: "));
+            // out.print((byte)value);
+            // out.println();
+            //
+            // out.print(F("2: "));
+            // out.print((byte)(value>>8));
+            // out.println();
+            //
+            // out.println();
 
             out.println(F("__________"));
         } break;
@@ -382,6 +405,21 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
         //     out.println();
         // } break;
         //-------------------------------------------------------------
+        case 'r': {
+            out.println(F("\t toggle lsm303 read enable"));
+            lsm303_handling::read_enabled =
+                !lsm303_handling::read_enabled;
+        } break;
+        case 'R': {
+            out.print(F("\t set lsm303 read interval "));
+            // convert part of string to int
+            // (up to first char that is not a number)
+            uint8_t command_offset = 1;
+            uint16_t value = atoi(&command[command_offset]);
+            out.print(value);
+            out.println();
+            lsm303_handling::read_interval = value;
+        } break;
         case 'a': {
             out.println(F("\t toggle lsm303 serial output"));
             lsm303_handling::serial_out_enabled =
@@ -412,13 +450,27 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
             out.println();
             lsm303_handling::dmx_send_interval = value;
         } break;
+        case 'e': {
+            out.println(F("\t toggle dmx serial out"));
+            dmx_handling::serial_out_enabled =
+                !dmx_handling::serial_out_enabled;
+        } break;
+        case 'E': {
+            out.print(F("\t set dmx serial out interval "));
+            // convert part of string to int
+            // (up to first char that is not a number)
+            uint8_t command_offset = 1;
+            uint16_t value = atoi(&command[command_offset]);
+            out.print(value);
+            out.println();
+            dmx_handling::serial_out_interval = value;
+        } break;
         case 't': {
             out.print(F("\t test send dmx values "));
             // int16_t value = filter_a_y.get_filterd_value();
             uint8_t value = 0;
-            int16_t temp = lsm303_handling::filter_a_y.get_filterd_value();
-            value = map(constrain(temp,
-                -17000, 17000), -17000, 17000, 0, 255);
+            value = dmx_handling::map_int16_to_uint8(
+                lsm303_handling::filter_a_y.get_filterd_value(), -17000, 17000);
             if (&command[1] != '\0') {
                 // value = random(-10000, +30000);
                 value = atoi(&command[1]);
@@ -440,11 +492,47 @@ void handleMenu_Main(slight_DebugMenu *pInstance) {
             // dmx_handling::dmx_send_int16(dmx_handling::ch_m_z, value);
             // dmx_handling::dmx_send_int16(dmx_handling::ch_heading, value);
             // dmx_handling::dmx_send_int16(dmx_handling::ch_temp, value);
-            DMXSerial.write(dmx_handling::ch_a_x, value);
-            DMXSerial.write(dmx_handling::ch_a_y, value);
-            DMXSerial.write(dmx_handling::ch_a_z, value);
-            DMXSerial.write(dmx_handling::ch_heading, value);
-            DMXSerial.write(dmx_handling::ch_temp, value);
+            dmx_handling::send_uint8(dmx_handling::ch_a_x, value);
+            dmx_handling::send_uint8(dmx_handling::ch_a_y, value);
+            dmx_handling::send_uint8(dmx_handling::ch_a_z, value);
+            dmx_handling::send_uint8(dmx_handling::ch_heading, value);
+            dmx_handling::send_uint8(dmx_handling::ch_temp, value);
+        } break;
+        case 'T': {
+            out.print(F("\t test fill filters "));
+            // int16_t value = filter_a_y.get_filterd_value();
+            int16_t value = random(0, 255);
+            if (&command[1] != '\0') {
+                value = atoi(&command[1]);
+            }
+            out.print(value);
+            out.println();
+
+            for (size_t i = 0; i < lsm303_handling::filter_size; i++) {
+                lsm303_handling::filter_a_x.add_value(value);
+                lsm303_handling::filter_a_y.add_value(value);
+                lsm303_handling::filter_a_z.add_value(value);
+                // lsm303_handling::filter_m_x.add_value(value);
+                // lsm303_handling::filter_m_y.add_value(value);
+                // lsm303_handling::filter_m_z.add_value(value);
+                lsm303_handling::filter_heading.add_value(value);
+                // lsm303_handling::filter_temp.add_value(value);
+            }
+            out.print(F("\t ... filled "));
+            out.print(lsm303_handling::filter_size);
+            out.println();
+            lsm303_handling::filter_a_x.update();
+            lsm303_handling::filter_a_y.update();
+            lsm303_handling::filter_a_z.update();
+            // lsm303_handling::filter_m_x.update();
+            // lsm303_handling::filter_m_y.update();
+            // lsm303_handling::filter_m_z.update();
+            lsm303_handling::filter_heading.update();
+            // lsm303_handling::filter_temp.update();
+            out.println(F("\t all updated"));
+            lsm303_handling::dmx_send();
+            out.println(F("\t dmx_send"));
+            out.println(F("\t done."));
         } break;
         // ------------------------------------------
         // case 's': {
@@ -634,6 +722,7 @@ void loop() {
     buttons_update();
 
     lsm303_handling::update(DebugOut);
+    dmx_handling::update(DebugOut);
 
     handle_debugout(DebugOut);
 }

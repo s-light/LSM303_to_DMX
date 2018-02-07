@@ -58,12 +58,18 @@ extern size_t values_dirty;
 extern uint8_t values[];
 
 // const uint16_t dmx_maxchannel_count = values_count*2;
-const uint16_t dmx_maxchannel_count = values_count;
+const uint16_t dmx_maxchannel_count = 10;
 
 extern bool dmx_valid;
 extern uint16_t dmx_start_channel;
 
+extern bool serial_out_enabled;
+extern uint16_t serial_out_interval;
+
+
+
 size_t chname2chindex(channel_names name);
+void send_uint8(channel_names name, uint8_t value);
 void send_uint16(size_t ch, uint16_t value);
 void send_int16(size_t ch, int16_t value);
 void send_int16(channel_names name, int16_t value);
@@ -72,10 +78,13 @@ void send_int16_mapped_to_uint8(
     int16_t value,
     int16_t low,
     int16_t high);
+
+uint8_t map_int16_to_uint8(int16_t value, int16_t low, int16_t high);
+
 void print_values(Print &out);
 
 void setup(Print &out);
-void update();
+void update(Print &out);
 
 }  // namespace dmx_handling
 

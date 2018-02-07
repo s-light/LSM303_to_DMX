@@ -45,7 +45,8 @@ namespace lsm303_handling {
 
 extern LSM303 compass;
 
-const uint16_t read_interval = 20;
+extern bool read_enabled;
+extern uint16_t read_interval;
 // 20ms = 50Hz = update rate for accelerometer
 
 extern bool serial_out_enabled;
@@ -57,6 +58,7 @@ extern uint16_t dmx_send_interval;
 
 const size_t filter_size = 25;
 const size_t filter_average_frame_length = 5;
+
 extern int16_t filter_array_a_x_raw[filter_size];
 extern int16_t filter_array_a_x_sorted[filter_size];
 extern slight_FilterMedianRingbuffer <int16_t> filter_a_x;
@@ -66,21 +68,24 @@ extern slight_FilterMedianRingbuffer <int16_t> filter_a_y;
 extern int16_t filter_array_a_z_raw[filter_size];
 extern int16_t filter_array_a_z_sorted[filter_size];
 extern slight_FilterMedianRingbuffer <int16_t> filter_a_z;
-extern int16_t filter_array_m_x_raw[filter_size];
-extern int16_t filter_array_m_x_sorted[filter_size];
-extern slight_FilterMedianRingbuffer <int16_t> filter_m_x;
-extern int16_t filter_array_m_y_raw[filter_size];
-extern int16_t filter_array_m_y_sorted[filter_size];
-extern slight_FilterMedianRingbuffer <int16_t> filter_m_y;
-extern int16_t filter_array_m_z_raw[filter_size];
-extern int16_t filter_array_m_z_sorted[filter_size];
-extern slight_FilterMedianRingbuffer <int16_t> filter_m_z;
+
+// extern int16_t filter_array_m_x_raw[filter_size];
+// extern int16_t filter_array_m_x_sorted[filter_size];
+// extern slight_FilterMedianRingbuffer <int16_t> filter_m_x;
+// extern int16_t filter_array_m_y_raw[filter_size];
+// extern int16_t filter_array_m_y_sorted[filter_size];
+// extern slight_FilterMedianRingbuffer <int16_t> filter_m_y;
+// extern int16_t filter_array_m_z_raw[filter_size];
+// extern int16_t filter_array_m_z_sorted[filter_size];
+// extern slight_FilterMedianRingbuffer <int16_t> filter_m_z;
+
 extern int16_t filter_array_heading_raw[filter_size];
 extern int16_t filter_array_heading_sorted[filter_size];
 extern slight_FilterMedianRingbuffer <int16_t> filter_heading;
-extern int16_t filter_array_temp_raw[filter_size];
-extern int16_t filter_array_temp_sorted[filter_size];
-extern slight_FilterMedianRingbuffer <int16_t> filter_temp;
+
+// extern int16_t filter_array_temp_raw[filter_size];
+// extern int16_t filter_array_temp_sorted[filter_size];
+// extern slight_FilterMedianRingbuffer <int16_t> filter_temp;
 
 
 // const size_t x_size = 6;
@@ -95,6 +100,7 @@ extern slight_FilterMedianRingbuffer <int16_t> filter_temp;
 
 void setup(Print &out);
 void update(Print &out);
+void dmx_send();
 
 }  // namespace lsm303_handling
 

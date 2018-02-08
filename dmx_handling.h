@@ -58,7 +58,7 @@ extern size_t values_dirty;
 extern uint8_t values[];
 
 // const uint16_t dmx_maxchannel_count = values_count*2;
-const uint16_t dmx_maxchannel_count = 10;
+const uint16_t dmx_maxchannel_count = 50;
 
 extern bool dmx_valid;
 extern uint16_t dmx_start_channel;

@@ -56,8 +56,8 @@ extern bool dmx_send_enabled;
 extern uint16_t dmx_send_interval;
 
 
-const size_t filter_size = 25;
-const size_t filter_average_frame_length = 5;
+const size_t filter_size = 30;
+const size_t filter_average_frame_length = 6;
 
 extern int16_t filter_array_a_x_raw[filter_size];
 extern int16_t filter_array_a_x_sorted[filter_size];
